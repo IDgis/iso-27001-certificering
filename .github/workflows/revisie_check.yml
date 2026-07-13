@@ -3,7 +3,7 @@ name: Revisie controle
 on:
   schedule:
     # - cron: "0 6 * * *"   # dagelijks 06:00 UTC
-    - cron: "45 11 13 7 *"
+    - cron: "20 12 13 7 *"
   workflow_dispatch:
 
 permissions:
@@ -14,8 +14,13 @@ permissions:
 
 env:
   ORG: IDgis
+  
+  # oude projectbord
   SOURCE_PROJECT: "11"
+  
+  # nieuwe projectbord
   TARGET_PROJECT: "15"
+  
   EXPIRED_LABEL: "revisie-verlopen"
 
 jobs:
@@ -33,13 +38,40 @@ jobs:
 
           echo "Vandaag: $TODAY"
 
-          # Alle open issues binnen organisatie ophalen die een Revisie datum bevatten
+
+          ####################################
+          # Project ID ophalen
+          ####################################
+
+          TARGET_PROJECT_ID=$(gh api graphql \
+            -f query='
+            query($org:String!, $number:Int!) {
+              organization(login:$org) {
+                projectV2(number:$number) {
+                  id
+                  title
+                }
+              }
+            }' \
+            -f org="$ORG" \
+            -f number="$TARGET_PROJECT" \
+            --jq '.data.organization.projectV2.id')
+
+
+          echo "Target project ID: $TARGET_PROJECT_ID"
+
+
+          ####################################
+          # Issues ophalen
+          ####################################
+
           gh issue list \
             --repo "$GITHUB_REPOSITORY" \
             --state open \
             --limit 1000 \
             --json number,title,body \
             > issues.json
+
 
           jq -c '.[]' issues.json | while read ISSUE
           do
@@ -48,16 +80,19 @@ jobs:
             TITLE=$(echo "$ISSUE" | jq -r '.title')
             BODY=$(echo "$ISSUE" | jq -r '.body // ""')
 
+
             REV_DATE=$(echo "$BODY" | grep -oE 'Revisie:[[:space:]]*[0-9]{4}-[0-9]{2}-[0-9]{2}' \
               | sed -E 's/Revisie:[[:space:]]*//')
+
 
             if [ -z "$REV_DATE" ]; then
               continue
             fi
 
+
             echo "Issue #$NUMBER revisie $REV_DATE"
 
-            # Datum vergelijking
+
             if [[ "$REV_DATE" > "$TODAY" ]]; then
               echo "Nog niet verlopen"
               continue
@@ -71,10 +106,17 @@ jobs:
             # Nieuw issue maken
             ####################################
 
+            gh label create "$EXPIRED_LABEL" \
+              --repo "$GITHUB_REPOSITORY" \
+              --description "Revisie verlopen" \
+              --force
+
+
             NEW_BODY="Vervolg nummer $NUMBER
 
 Origineel issue:
 https://github.com/$GITHUB_REPOSITORY/issues/$NUMBER"
+
 
             NEW_URL=$(gh issue create \
               --repo "$GITHUB_REPOSITORY" \
@@ -82,7 +124,9 @@ https://github.com/$GITHUB_REPOSITORY/issues/$NUMBER"
               --body "$NEW_BODY" \
               --label "$EXPIRED_LABEL")
 
+
             NEW_NUMBER=$(echo "$NEW_URL" | grep -oE '[0-9]+$')
+
 
             echo "Nieuw issue: #$NEW_NUMBER"
 
@@ -115,6 +159,7 @@ $NEW_URL"
 
             echo "Toevoegen aan project $TARGET_PROJECT"
 
+
             ITEM_ID=$(gh api graphql \
               -f query='
               mutation($project:ID!, $content:ID!) {
@@ -129,7 +174,7 @@ $NEW_URL"
                   }
                 }
               }' \
-              -f project="PVT_kwDO..." \
+              -f project="$TARGET_PROJECT_ID" \
               -f content="$(gh issue view "$NEW_NUMBER" \
                     --repo "$GITHUB_REPOSITORY" \
                     --json id \
@@ -138,5 +183,6 @@ $NEW_URL"
 
 
             echo "Project item: $ITEM_ID"
+
 
           done
