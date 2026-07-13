@@ -71,7 +71,7 @@ jobs:
             > issues.json
 
 
-          jq -c '.[]' issues.json | while read ISSUE
+          while IFS= read -r ISSUE
           do
 
             NUMBER=$(echo "$ISSUE" | jq -r '.number')
@@ -110,8 +110,7 @@ jobs:
               --force
 
 
-            NEW_BODY="Is vervolg van #$NUMBER
-            Origineel: https://github.com/$GITHUB_REPOSITORY/issues/$NUMBER"
+            NEW_BODY="Is vervolg van #$NUMBER"
 
 
             NEW_URL=$(gh issue create \
@@ -134,8 +133,7 @@ jobs:
             gh issue comment "$NUMBER" \
               --repo "$GITHUB_REPOSITORY" \
               --body \
-            "Nieuwe revisie aangemaakt. Vervolg issue: #$NEW_NUMBER
-            $NEW_URL"
+            "Nieuwe revisie aangemaakt. Vervolg issue: #$NEW_NUMBER"
 
 
             ####################################
@@ -174,9 +172,6 @@ jobs:
             # Oud issue sluiten
             ####################################
 
-            gh issue close "$NUMBER" \
-              --repo "$GITHUB_REPOSITORY"
-
             if [ -z "$ITEM_ID" ]; then
               echo "Issue kon niet aan project worden toegevoegd"
               exit 1
@@ -184,4 +179,9 @@ jobs:
             
             echo "Project item: $ITEM_ID"
 
-          done
+            gh issue close "$NUMBER" \
+              --repo "$GITHUB_REPOSITORY"
+
+          done < <(jq -c '.[]' issues.json)
+
+          echo "Workflow succesvol afgerond."
