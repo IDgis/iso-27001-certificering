@@ -1,0 +1,141 @@
+name: Revisie controle
+
+on:
+  schedule:
+    - cron: "0 6 * * *"   # dagelijks 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
+  repository-projects: write
+
+env:
+  ORG: IDgis
+  SOURCE_PROJECT: "11"
+  TARGET_PROJECT: "15"
+  EXPIRED_LABEL: "revisie-verlopen"
+
+jobs:
+  revisie-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Controleer revisiedatums en maak vervolgissues
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+
+          TODAY=$(date +%Y-%m-%d)
+
+          echo "Vandaag: $TODAY"
+
+          # Alle open issues binnen organisatie ophalen die een Revisie datum bevatten
+          gh issue list \
+            --repo "$GITHUB_REPOSITORY" \
+            --state open \
+            --limit 1000 \
+            --json number,title,body \
+            > issues.json
+
+          jq -c '.[]' issues.json | while read ISSUE
+          do
+
+            NUMBER=$(echo "$ISSUE" | jq -r '.number')
+            TITLE=$(echo "$ISSUE" | jq -r '.title')
+            BODY=$(echo "$ISSUE" | jq -r '.body // ""')
+
+            REV_DATE=$(echo "$BODY" | grep -oE 'Revisie:[[:space:]]*[0-9]{4}-[0-9]{2}-[0-9]{2}' \
+              | sed -E 's/Revisie:[[:space:]]*//')
+
+            if [ -z "$REV_DATE" ]; then
+              continue
+            fi
+
+            echo "Issue #$NUMBER revisie $REV_DATE"
+
+            # Datum vergelijking
+            if [[ "$REV_DATE" > "$TODAY" ]]; then
+              echo "Nog niet verlopen"
+              continue
+            fi
+
+
+            echo "Revisie verlopen voor issue #$NUMBER"
+
+
+            ####################################
+            # Nieuw issue maken
+            ####################################
+
+            NEW_BODY="Vervolg nummer $NUMBER
+
+Origineel issue:
+https://github.com/$GITHUB_REPOSITORY/issues/$NUMBER"
+
+            NEW_URL=$(gh issue create \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "$TITLE" \
+              --body "$NEW_BODY" \
+              --label "$EXPIRED_LABEL")
+
+            NEW_NUMBER=$(echo "$NEW_URL" | grep -oE '[0-9]+$')
+
+            echo "Nieuw issue: #$NEW_NUMBER"
+
+
+            ####################################
+            # Verwijzing toevoegen aan oud issue
+            ####################################
+
+            gh issue comment "$NUMBER" \
+              --repo "$GITHUB_REPOSITORY" \
+              --body \
+"Nieuwe revisie aangemaakt:
+
+Vervolg issue: #$NEW_NUMBER
+
+$NEW_URL"
+
+
+            ####################################
+            # Oud issue sluiten
+            ####################################
+
+            gh issue close "$NUMBER" \
+              --repo "$GITHUB_REPOSITORY"
+
+
+            ####################################
+            # Nieuw issue naar project_2027 backlog
+            ####################################
+
+            echo "Toevoegen aan project $TARGET_PROJECT"
+
+            ITEM_ID=$(gh api graphql \
+              -f query='
+              mutation($project:ID!, $content:ID!) {
+                addProjectV2ItemById(
+                  input:{
+                    projectId:$project,
+                    contentId:$content
+                  }
+                ){
+                  item {
+                    id
+                  }
+                }
+              }' \
+              -f project="PVT_kwDO..." \
+              -f content="$(gh issue view "$NEW_NUMBER" \
+                    --repo "$GITHUB_REPOSITORY" \
+                    --json id \
+                    -q .id)" \
+              --jq '.data.addProjectV2ItemById.item.id')
+
+
+            echo "Project item: $ITEM_ID"
+
+          done
