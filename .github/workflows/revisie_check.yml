@@ -57,7 +57,6 @@ jobs:
               }
             }'
 
-
           TARGET_PROJECT_ID=$(gh api graphql \
             -f query='
             query($org:String!, $number:Int!) {
@@ -71,8 +70,7 @@ jobs:
             -F org="$ORG" \
             -F number="$TARGET_PROJECT" \
             --jq '.data.organization.projectV2.id')
-
-
+          
           echo "Target project ID: $TARGET_PROJECT_ID"
 
 
