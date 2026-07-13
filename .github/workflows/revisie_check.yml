@@ -42,6 +42,22 @@ jobs:
           # Project ID ophalen
           ####################################
 
+            echo "Controle projecttoegang..."
+            
+            gh api graphql -f query='
+            {
+              organization(login:"IDgis") {
+                projectsV2(first:50) {
+                  nodes {
+                    number
+                    title
+                    id
+                  }
+                }
+              }
+            }'
+
+
           TARGET_PROJECT_ID=$(gh api graphql \
             -f query='
             query($org:String!, $number:Int!) {
