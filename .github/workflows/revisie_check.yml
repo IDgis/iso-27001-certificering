@@ -182,6 +182,9 @@ jobs:
             gh issue close "$NUMBER" \
               --repo "$GITHUB_REPOSITORY"
 
+            echo "Issue #$NUMBER succesvol afgerond."
+
           done < <(jq -c '.[]' issues.json)
 
           echo "Workflow succesvol afgerond."
+          exit 0
