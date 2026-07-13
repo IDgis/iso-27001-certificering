@@ -29,7 +29,7 @@ jobs:
     steps:
       - name: Controleer revisiedatums en maak vervolgissues
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
         shell: bash
         run: |
 
