@@ -114,8 +114,8 @@ jobs:
 
             NEW_BODY="Vervolg nummer $NUMBER
 
-Origineel issue:
-https://github.com/$GITHUB_REPOSITORY/issues/$NUMBER"
+            Origineel issue:
+            https://github.com/$GITHUB_REPOSITORY/issues/$NUMBER"
 
 
             NEW_URL=$(gh issue create \
