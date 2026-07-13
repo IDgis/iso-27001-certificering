@@ -138,11 +138,11 @@ jobs:
             gh issue comment "$NUMBER" \
               --repo "$GITHUB_REPOSITORY" \
               --body \
-"Nieuwe revisie aangemaakt:
-
-Vervolg issue: #$NEW_NUMBER
-
-$NEW_URL"
+            "Nieuwe revisie aangemaakt:
+            
+            Vervolg issue: #$NEW_NUMBER
+            
+            $NEW_URL"
 
 
             ####################################
