@@ -52,8 +52,8 @@ jobs:
                 }
               }
             }' \
-            -f org="$ORG" \
-            -f number="$TARGET_PROJECT" \
+            -F org="$ORG" \
+            -F number="$TARGET_PROJECT" \
             --jq '.data.organization.projectV2.id')
 
 
