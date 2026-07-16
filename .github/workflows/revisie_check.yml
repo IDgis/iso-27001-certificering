@@ -104,12 +104,6 @@ jobs:
             # Nieuw issue maken
             ####################################
 
-            gh label create "$EXPIRED_LABEL" \
-              --repo "$GITHUB_REPOSITORY" \
-              --description "Revisie verlopen" \
-              --force
-
-
             NEW_BODY="Is vervolg van #$NUMBER"
 
 
