@@ -14,9 +14,6 @@ permissions:
 env:
   ORG: IDgis
   
-  # oude projectbord
-  SOURCE_PROJECT: "11"
-  
   # nieuwe projectbord
   TARGET_PROJECT: "15"
   
@@ -34,7 +31,7 @@ jobs:
         run: |
 
           set -euxo pipefail
-          
+
           TODAY=$(date +%Y-%m-%d)
 
           echo "Vandaag: $TODAY"
@@ -57,23 +54,26 @@ jobs:
             -F org="$ORG" \
             -F number="$TARGET_PROJECT" \
             --jq '.data.organization.projectV2.id')
-          
+
           echo "Target project ID: $TARGET_PROJECT_ID"
 
 
           ####################################
-          # Issues ophalen
+          # Alleen open issues met Revisie ophalen
           ####################################
-
-          echo "Repository: $GITHUB_REPOSITORY"
 
           gh issue list \
             --repo "$GITHUB_REPOSITORY" \
             --state open \
+            --search "Revisie:" \
             --limit 1000 \
             --json number,title,body \
             > issues.json
 
+
+          ####################################
+          # Issues controleren
+          ####################################
 
           while IFS= read -r ISSUE
           do
@@ -83,17 +83,34 @@ jobs:
             BODY=$(echo "$ISSUE" | jq -r '.body // ""')
 
 
-            REV_DATE=$(echo "$BODY" | grep -oE 'Revisie:[[:space:]]*[0-9]{4}-[0-9]{2}-[0-9]{2}' \
-              | sed -E 's/Revisie:[[:space:]]*//')
+            ####################################
+            # Bestaande vervolgissues overslaan
+            ####################################
+
+            if [[ "$BODY" =~ Is\ vervolg\ van\ #[0-9]+ ]]; then
+              echo "Issue #$NUMBER is een vervolgissue, overslaan"
+              continue
+            fi
 
 
-            if [ -z "$REV_DATE" ]; then
+            ####################################
+            # Revisiedatum uitlezen
+            ####################################
+
+            if [[ "$BODY" =~ Revisie:[[:space:]]*([0-9]{4}-[0-9]{2}-[0-9]{2}) ]]; then
+              REV_DATE="${BASH_REMATCH[1]}"
+            else
+              echo "Geen revisiedatum gevonden in issue #$NUMBER"
               continue
             fi
 
 
             echo "Issue #$NUMBER revisie $REV_DATE"
 
+
+            ####################################
+            # Controleren of revisie verlopen is
+            ####################################
 
             if [[ "$REV_DATE" > "$TODAY" ]]; then
               echo "Nog niet verlopen"
@@ -120,7 +137,6 @@ jobs:
 
             NEW_NUMBER=$(echo "$NEW_URL" | grep -oE '[0-9]+$')
 
-
             echo "Nieuw issue: #$NEW_NUMBER"
 
 
@@ -135,15 +151,17 @@ jobs:
 
 
             ####################################
-            # Nieuw issue naar project_2027 backlog
+            # Nieuw issue naar project backlog
             ####################################
 
             echo "Toevoegen aan project $TARGET_PROJECT"
 
-            echo "Nieuw issue ID:"
-            gh issue view "$NEW_NUMBER" \
+
+            ISSUE_ID=$(gh issue view "$NEW_NUMBER" \
               --repo "$GITHUB_REPOSITORY" \
-              --json id
+              --json id \
+              -q .id)
+
 
             ITEM_ID=$(gh api graphql \
               -f query='
@@ -160,15 +178,9 @@ jobs:
                 }
               }' \
               -f project="$TARGET_PROJECT_ID" \
-              -f content="$(gh issue view "$NEW_NUMBER" \
-                    --repo "$GITHUB_REPOSITORY" \
-                    --json id \
-                    -q .id)" \
+              -f content="$ISSUE_ID" \
               --jq '.data.addProjectV2ItemById.item.id')
 
-            ####################################
-            # Oud issue sluiten
-            ####################################
 
             if [ -z "$ITEM_ID" ]; then
               echo "Issue kon niet aan project worden toegevoegd"
@@ -177,12 +189,18 @@ jobs:
             
             echo "Project item: $ITEM_ID"
 
+
+            ####################################
+            # Oud issue sluiten
+            ####################################
+
             gh issue close "$NUMBER" \
               --repo "$GITHUB_REPOSITORY"
+
 
             echo "Issue #$NUMBER succesvol afgerond."
 
           done < <(jq -c '.[]' issues.json)
 
+
           echo "Workflow succesvol afgerond."
-          exit 0
