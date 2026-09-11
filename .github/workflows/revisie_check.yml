@@ -112,7 +112,7 @@ jobs:
             
             gh issue comment "$NUMBER" \
               --repo "$GITHUB_REPOSITORY" \
-              --body "@hnkeVanBeek-IDgis De revisiedatum van #$NUMBER is verlopen."
+              --body "@AnkeVanBeek-IDgis De revisiedatum van #$NUMBER is verlopen."
 
             ####################################
             # Project item zoeken
