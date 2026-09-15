@@ -192,12 +192,13 @@ jobs:
             echo "Issue #$NUMBER naar Ready to start gezet."
 
             ####################################
-            # Warning toevoegen
+            # Warning toevoegen via GitHub Actions bot
             ####################################
 
-            gh issue comment "$NUMBER" \
-              --repo "$GITHUB_REPOSITORY" \
-              --body "@AnkeVanBeek-IDgis De revisietermijn voor issue #$NUMBER is verlopen."
+            GH_TOKEN="${{ secrets.GITHUB_TOKEN }}" \
+              gh issue comment "$NUMBER" \
+                --repo "$GITHUB_REPOSITORY" \
+                --body "@AnkeVanBeek-IDgis De revisietermijn voor issue #$NUMBER is verlopen."
 
             echo "Warning toegevoegd aan issue #$NUMBER."
 
