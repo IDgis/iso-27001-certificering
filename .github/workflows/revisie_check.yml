@@ -191,6 +191,16 @@ jobs:
 
             echo "Issue #$NUMBER naar Ready to start gezet."
 
+            ####################################
+            # Warning toevoegen
+            ####################################
+
+            gh issue comment "$NUMBER" \
+              --repo "$GITHUB_REPOSITORY" \
+              --body "@AnkeVanBeek-IDgis De revisietermijn voor issue #$NUMBER is verlopen."
+
+            echo "Warning toegevoegd aan issue #$NUMBER."
+
           done
 
 
