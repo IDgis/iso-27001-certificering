@@ -65,13 +65,40 @@ jobs:
           ####################################
           # Open Backlog issues uit project ophalen
           ####################################
-          
-          gh project item-list "$TARGET_PROJECT" \
-            --owner "$ORG" \
-            --limit 1000 \
-            --query "is:issue is:open status:Backlog" \
-            --format json \
-            > project-items.json
+
+          gh api graphql -f query='
+          query($org:String!, $number:Int!) {
+            organization(login:$org) {
+              projectV2(number:$number) {
+                items(first:100) {
+                  nodes {
+                    id
+                    fieldValueByName(name:"Status") {
+                      ... on ProjectV2ItemFieldSingleSelectValue {
+                        name
+                      }
+                    }
+                    content {
+                      ... on Issue {
+                        number
+                        body
+                        state
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }' \
+          -F org="$ORG" \
+          -F number="$TARGET_PROJECT" \
+          --jq '{
+            items: [
+              .data.organization.projectV2.items.nodes[]
+              | select(.content.state == "OPEN")
+              | select(.fieldValueByName.name == "Backlog")
+            ]
+          }' > project-items.json
 
           echo "Geselecteerde projectitems:"
           jq '.' project-items.json
