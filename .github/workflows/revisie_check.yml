@@ -63,123 +63,63 @@ jobs:
                 | .id')
 
           ####################################
-          # Open issues ophalen
+          # Open Backlog issues uit project ophalen
           ####################################
-
-          gh issue list \
-            --repo "$GITHUB_REPOSITORY" \
-            --state open \
-            --search "Revisie:" \
+          
+          gh project item-list "$TARGET_PROJECT" \
+            --owner "$ORG" \
             --limit 1000 \
-            --json number,body,labels \
-            > issues.json
+            --query "is:issue is:open status:Backlog" \
+            --format json \
+            > project-items.json
 
+          echo "Geselecteerde projectitems:"
+          jq '.' project-items.json
+          
           ####################################
           # Issues controleren
           ####################################
 
-          while IFS= read -r ISSUE
+          jq -c '.items[]' project-items.json | while IFS= read -r ITEM
           do
-            NUMBER=$(echo "$ISSUE" | jq -r '.number')
-            BODY=$(echo "$ISSUE" | jq -r '.body // ""')
+            NUMBER=$(echo "$ITEM" | jq -r '.content.number')
+            BODY=$(echo "$ITEM" | jq -r '.content.body // ""')
 
-            if [[ "$BODY" =~ Revisie:[[:space:]]*([0-9]{4}-[0-9]{2}-[0-9]{2}) ]]; then
-              REV_DATE="${BASH_REMATCH[1]}"
+            echo "Controle issue #$NUMBER"
+
+            ####################################
+            # Vorige afsluitdatum uitlezen
+            ####################################
+
+            if [[ "$BODY" =~ Vorige[[:space:]]afsluitdatum:[[:space:]]*([0-9]{4}-[0-9]{2}-[0-9]{2}) ]]; then
+              CLOSE_DATE="${BASH_REMATCH[1]}"
             else
-              continue
-            fi
-
-            echo "Issue #$NUMBER revisie: $REV_DATE"
-
-            if [[ "$REV_DATE" > "$TODAY" ]]; then
-              echo "Nog niet verlopen."
-              continue
-            fi
-
-            echo "Revisie verlopen."
-
-            ####################################
-            # Label toevoegen
-            ####################################
-
-            gh issue edit "$NUMBER" \
-              --repo "$GITHUB_REPOSITORY" \
-              --add-label "$EXPIRED_LABEL"
-
-            ####################################
-            # Melding toevoegen
-            ####################################
-            
-            gh issue comment "$NUMBER" \
-              --repo "$GITHUB_REPOSITORY" \
-              --body "@AnkeVanBeek-IDgis De revisiedatum van #$NUMBER is verlopen."
-
-            ####################################
-            # Project item zoeken
-            ####################################
-
-            ITEM_ID=$(gh api graphql -f query='
-            query($org:String!, $number:Int!, $issue:Int!) {
-              organization(login:$org) {
-                projectV2(number:$number) {
-                  items(first:100) {
-                    nodes {
-                      id
-                      content {
-                        ... on Issue {
-                          number
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }' \
-            -F org="$ORG" \
-            -F number="$TARGET_PROJECT" \
-            -F issue="$NUMBER" \
-            --jq '.data.organization.projectV2.items.nodes[]
-                  | select(.content.number=='"$NUMBER"')
-                  | .id')
-
-            if [ -z "$ITEM_ID" ]; then
-              echo "Issue staat niet op project."
+              echo "Geen vorige afsluitdatum gevonden."
               continue
             fi
 
             ####################################
-            # Status -> Ready
+            # Herhaaltermijn uitlezen
             ####################################
 
-            gh api graphql -f query='
-            mutation(
-              $project:ID!,
-              $item:ID!,
-              $field:ID!,
-              $option:String!
-            ){
-              updateProjectV2ItemFieldValue(
-                input:{
-                  projectId:$project
-                  itemId:$item
-                  fieldId:$field
-                  value:{
-                    singleSelectOptionId:$option
-                  }
-                }
-              ){
-                projectV2Item {
-                  id
-                }
-              }
-            }' \
-            -f project="$PROJECT_ID" \
-            -f item="$ITEM_ID" \
-            -f field="$STATUS_FIELD_ID" \
-            -f option="$READY_OPTION_ID"
+            if [[ "$BODY" =~ Herhaaltermijn:[[:space:]]*([0-9]+)[[:space:]]dagen ]]; then
+              INTERVAL="${BASH_REMATCH[1]}"
+            else
+              echo "Geen herhaaltermijn gevonden."
+              continue
+            fi
 
-            echo "Issue #$NUMBER bijgewerkt."
+            ####################################
+            # Revisiedatum berekenen
+            ####################################
 
-          done < <(jq -c '.[]' issues.json)
+            REV_DATE=$(date -d "$CLOSE_DATE + $INTERVAL days" +%Y-%m-%d)
+
+            echo "Vorige afsluitdatum : $CLOSE_DATE"
+            echo "Herhaaltermijn      : $INTERVAL dagen"
+            echo "Revisiedatum        : $REV_DATE"
+
+          done
+
 
           echo "Workflow succesvol afgerond."
