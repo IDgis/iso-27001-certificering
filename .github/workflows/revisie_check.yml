@@ -159,6 +159,14 @@ jobs:
             echo "Revisie verlopen."
 
             ####################################
+            # Label toevoegen
+            ####################################
+
+            gh issue edit "$NUMBER" \
+              --repo "$GITHUB_REPOSITORY" \
+              --add-label "$EXPIRED_LABEL"
+
+            ####################################
             # Status -> Ready to start
             ####################################
 
