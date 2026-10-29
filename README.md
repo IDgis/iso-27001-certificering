@@ -34,19 +34,21 @@ In de body wordt opgenomen:
   een verwijzing naar het resultaat of bewijs.
 
 ## GitHub action
-### Werking
-Deze GitHub Action controleert maandelijks of periodieke ISMS-werkzaamheden opnieuw uitgevoerd moeten worden. Daarvoor worden de openstaande issues met de status **Backlog** in project **ISO-27001-certificering_2027**.
-Per issue wordt op basis van de body twee waarden uitgelezen:
-- vorige afsluitdatum
-- herhaaltermijn
+De GitHub Action Revisie controle wordt iedere eerste dag van de maand uitgevoerd.
+De Action:
+- selecteert alle open issues met status Backlog op het ISO 27001-projectbord;
+- leest uit de issue-body de vorige afsluitdatum en herhaaltermijn;
+- berekent op basis hiervan de nieuwe revisiedatum;
+- doet niets als de revisiedatum nog niet is verstreken;
+- zet een verlopen issue op 'Ready to start';
+- voegt het label 'revisie-verlopen' toe;
+- plaatst via github-actions[bot] een melding met een @mention, zodat hiervan een GitHub-notificatie/e-mail kan worden ontvangen.
 
-Wanneer de revisiedatum (vorige afsluitdatum + herhaaltermijn) is bereikt of verstreken, wordt automatisch:
-1. het label `revisie-verlopen`
-2. de issue status gewijzigd naar `ready to start`
-3. een reactie geplaatst waarin `@AnkeVanBeek-IDgis` wordt geïnformeerd
+Issues waarbij de vorige afsluitdatum of herhaaltermijn ontbreekt, worden overgeslagen.
 
 **Bijzonderheden**  
 - issues zonder geldige afsluitdatum of herhaaltermijn worden overgeslagen
 - issues waarvan de revisiedatum nog niet is bereikt, blijven ongewijzigd
 - alleen de eerste 100 issues worden opgehaald
-- voor toegang tot het project wordt het secret PROJECT_TOKEN gebruikt.
+- voor toegang tot het project wordt het secret PROJECT_TOKEN gebruikt
+- voor de certificeringsactiviteiten van 2028 (en verder) moet een nieuw GitHub-projectbord gemaakt worden en moet de actions aangepast worden
