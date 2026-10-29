@@ -12,16 +12,16 @@ Het projectbord biedt inzicht in:
 
 ## Typen issues
 
-**Review**
+**Review**: 
 Beoordelen of beleid, registraties, risico's of doelstellingen nog actueel, passend en effectief zijn. Waar nodig worden deze geactualiseerd.
 
-**Controle**
+**Controle**: 
 Toetsen of de praktijk voldoet aan vastgestelde eisen, afspraken en beveiligingsmaatregelen.
 
-**Uitvoering**
+**Uitvoering**: 
 Uitvoeren van reguliere operationele werkzaamheden en bestaande beveiligingsmaatregelen.
 
-**Verbetering**
+**Verbetering**: 
 Oplossen van tekortkomingen of structureel verbeteren van processen en maatregelen.
 
 ## Naamgeving issues
