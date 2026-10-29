@@ -10,7 +10,8 @@ Het projectbord biedt inzicht in:
 - Controles en beoordelingen
 - Verbeteracties
 
-## Typen issues
+## Issues
+### Typen issues
 
 **Review**: 
 Beoordelen of beleid, registraties, risico's of doelstellingen nog actueel, passend en effectief zijn. Waar nodig worden deze geactualiseerd.
@@ -24,11 +25,16 @@ Uitvoeren van reguliere operationele werkzaamheden en bestaande beveiligingsmaat
 **Verbetering**: 
 Oplossen van tekortkomingen of structureel verbeteren van processen en maatregelen.
 
-## Naamgeving issues
+### Naamgeving en inhoud issues
 
 Issues krijgen de volgende structuur: `<Type>: <Onderwerp>`
+In de body wordt opgenomen:
+- het nummer van de voorgaande issue
+- de datum waarop het voorgaande issue is gesloten
+- de herhaaltermijn (in dagen) die voor dit onderwerp geldt
+- de link van het bijbehorende document in Google drive
 
-## Uitgangspunten
+### Uitgangspunten
 
 - Het primaire doel bepaalt het type issue.
 - Een review kan ook actualisatie omvatten.
@@ -36,3 +42,21 @@ Issues krijgen de volgende structuur: `<Type>: <Onderwerp>`
 - Werkzaamheden worden niet onnodig opgesplitst.
 - Afgeronde issues bevatten waar relevant
   een verwijzing naar het resultaat of bewijs.
+
+## GitHub action
+### Werking
+Deze GitHub Action controleert maandelijks of periodieke ISMS-werkzaamheden opnieuw uitgevoerd moeten worden. Daarvoor worden de openstaande issues met de status **Backlog** in project **ISO-27001-certificering_2027**.
+Per issue wordt op basis van de body twee waarden uitgelezen:
+- vorige afsluitdatum
+- herhaaltermijn
+
+Wanneer de revisiedatum (vorige afsluitdatum + herhaaltermijn) is bereikt of verstreken, wordt automatisch:
+1. het label `revisie-verlopen`
+2. de issue status gewijzigd naar `ready to start`
+3. een reactie geplaatst waarin `@AnkeVanBeek-IDgis` wordt geïnformeerd
+
+**Bijzonderheden**  
+- issues zonder geldige afsluitdatum of herhaaltermijn worden overgeslagen
+- issues waarvan de revisiedatum nog niet is bereikt, blijven ongewijzigd
+- alleen de eerste 100 issues worden opgehaald
+- voor toegang tot het project wordt het secret PROJECT_TOKEN gebruikt.
