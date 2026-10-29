@@ -26,9 +26,7 @@ Oplossen van tekortkomingen of structureel verbeteren van processen en maatregel
 
 ## Naamgeving issues
 
-Issues krijgen de volgende structuur:
-
-<Type>: <Onderwerp>
+Issues krijgen de volgende structuur: `<Type>: <Onderwerp>`
 
 ## Uitgangspunten
 
