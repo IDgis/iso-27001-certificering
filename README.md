@@ -36,7 +36,7 @@ In de body wordt opgenomen:
 ## GitHub action
 De GitHub Action Revisie controle wordt iedere eerste dag van de maand uitgevoerd.
 De Action:
-- selecteert alle open issues met status Backlog op het ISO 27001-projectbord;
+- selecteert alle open issues met status Backlog op het `ISO-27001-certificering_2027`-projectbord;
 - leest uit de issue-body de vorige afsluitdatum en herhaaltermijn;
 - berekent op basis hiervan de nieuwe revisiedatum;
 - doet niets als de revisiedatum nog niet is verstreken;
