@@ -27,7 +27,7 @@ Oplossen van tekortkomingen of structureel verbeteren van processen en maatregel
 
 ### Naamgeving en inhoud issues
 
-Issues krijgen de volgende structuur: `<Type>: <Onderwerp>`
+Issues krijgen de volgende structuur: `<Type>: <Onderwerp>`  
 In de body wordt opgenomen:
 - het nummer van de voorgaande issue
 - de datum waarop het voorgaande issue is gesloten
