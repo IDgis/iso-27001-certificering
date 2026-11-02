@@ -7,7 +7,7 @@ assignees: ''
 ---
 
 Vorig issue: 
-Vorige afsluitdatum (YYYY-MM-DD): 
+Vorige afsluitdatum: yyyy-mm-yy
 
 Herhaaltermijn: 365 dagen
 
