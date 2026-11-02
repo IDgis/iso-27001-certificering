@@ -19,11 +19,15 @@ Het projectbord biedt inzicht in:
 
 ### Naamgeving en inhoud issues
 Issues krijgen de volgende structuur: `<Type>: <Onderwerp>`  
+Het sjabloon is vastgelegd in .github/ISSUE_TEMPLATE/taak.md.
+
 In de body wordt opgenomen:  
 - het nummer van de voorgaande issue
 - de datum waarop het voorgaande issue is gesloten
 - de herhaaltermijn (in dagen) die voor dit onderwerp geldt
 - de link van het bijbehorende document in Google drive
+- eventueel een checklist van (deel)taken
+
 
 ### Uitgangspunten
 - Het primaire doel bepaalt het type issue.
