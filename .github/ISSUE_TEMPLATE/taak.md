@@ -1,6 +1,6 @@
 ---
 name: Taak
-about: Maak een taak aan
+about: Maak met sjabloon een taak aan
 title: ''
 labels: ''
 assignees: ''
