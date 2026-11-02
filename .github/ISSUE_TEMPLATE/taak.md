@@ -1,4 +1,11 @@
-name: Terugkerende taak
+---
+name: Taak
+about: Maak een taak aan
+title: ''
+labels: ''
+assignees: ''
+---
+
 Vorig issue: 
 Vorige afsluitdatum (YYYY-MM-DD): 
 
