@@ -1,4 +1,4 @@
-
+name: Terugkerende taak
 Vorig issue: 
 Vorige afsluitdatum (YYYY-MM-DD): 
 
